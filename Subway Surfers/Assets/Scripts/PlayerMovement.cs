@@ -2,11 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
+
 
 public class PlayerMovement: MonoBehaviour
 {
     public CharacterController controller;
-    public GameObject player;
 
     [Header("Gravity Settings")]
     public float gravity = 9.81f;
@@ -25,6 +26,13 @@ public class PlayerMovement: MonoBehaviour
     
     private int position = 0;
     private bool isSliding;
+    
+    private Vector3 hop = Vector3.zero;
+
+    [Header("Audio")]
+    public AudioSource jumpAudio;
+    public AudioSource crouchAudio;
+    public AudioSource hopAudio;
     void Start()
     {
         
@@ -43,7 +51,6 @@ public class PlayerMovement: MonoBehaviour
         }
         velocity.y -= gravity * Time.fixedDeltaTime;
         controller.Move(velocity * Time.fixedDeltaTime);
-        
     } 
         
     private void Update()
@@ -51,6 +58,7 @@ public class PlayerMovement: MonoBehaviour
         if (Input.GetKeyDown(KeyCode.W) && isGrounded)    // Jumping
         {
             velocity.y = jumpHeight;
+            jumpAudio.Play();
         }
         
         if (Input.GetKeyDown(KeyCode.S))   // Slide crouching
@@ -60,26 +68,31 @@ public class PlayerMovement: MonoBehaviour
             { 
                 StartCoroutine(SlideCrouch());     
             }
+            crouchAudio.Play();
         }
         
         if (Input.GetKeyDown(KeyCode.A) && position != -1)  // Hopping left
         {
             position--;
-            controller.center -= new Vector3(1.5f,0,0);
-            transform.position -= new Vector3(4, 0, 0);
+            hop = new Vector3(-5,0,0);
+            ChangeTrack();
+            hopAudio.Play();
         }
 
         if (Input.GetKeyDown(KeyCode.D) && position != 1)   // Hopping right
         {
-            position++;
-            controller.center += new Vector3(1.5f,0,0);
-            transform.position += new Vector3(4, 0, 0);
-        } 
-    
-       
-
+            position++; 
+            hop = new Vector3(5,0,0);
+            ChangeTrack();
+            hopAudio.Play();
+        }
+        
     }
-
+    private void ChangeTrack()
+    {
+        controller.Move(hop);
+    }
+    
     private IEnumerator SlideCrouch()
     {
         isSliding = true;
@@ -88,7 +101,7 @@ public class PlayerMovement: MonoBehaviour
         
         yield return new WaitForSeconds(0.6f);
         
-        controller.height = 1f;
+        controller.height = 3f;
         controller.center += new Vector3(0, 0.2f,0);
         isSliding = false;
     }
