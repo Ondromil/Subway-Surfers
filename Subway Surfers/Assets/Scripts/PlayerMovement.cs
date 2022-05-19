@@ -2,8 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Audio;
-
 
 public class PlayerMovement: MonoBehaviour
 {
@@ -26,16 +24,21 @@ public class PlayerMovement: MonoBehaviour
     
     private int position = 0;
     private bool isSliding;
-    
+    private bool canHop = true;
+
     private Vector3 hop = Vector3.zero;
 
     [Header("Audio")]
     public AudioSource jumpAudio;
     public AudioSource crouchAudio;
     public AudioSource hopAudio;
-    void Start()
+
+    private Animator animator;
+
+    private float timeElapsed;
+    private void Start()
     {
-        
+        animator = GetComponent<Animator>();
     }
     
     private void FixedUpdate()
@@ -59,6 +62,7 @@ public class PlayerMovement: MonoBehaviour
         {
             velocity.y = jumpHeight;
             jumpAudio.Play();
+            animator.Play("MaxSneakers-JumpA");
         }
         
         if (Input.GetKeyDown(KeyCode.S))   // Slide crouching
@@ -69,41 +73,76 @@ public class PlayerMovement: MonoBehaviour
                 StartCoroutine(SlideCrouch());     
             }
             crouchAudio.Play();
+            animator.Play("MaxSneakers-Scroll");
         }
         
-        if (Input.GetKeyDown(KeyCode.A) && position != -1)  // Hopping left
+        if (Input.GetKeyDown(KeyCode.A) && position != -1 && canHop)  // Hopping left
         {
             position--;
-            hop = new Vector3(-5,0,0);
-            ChangeTrack();
+            hop = new Vector3(-5, 0, 0);
+            StartCoroutine(Lerp());
             hopAudio.Play();
+            animator.Play("MaxSneakers-Left");
+      
         }
 
-        if (Input.GetKeyDown(KeyCode.D) && position != 1)   // Hopping right
+        if (Input.GetKeyDown(KeyCode.D) && position != 1 && canHop)   // Hopping right
         {
-            position++; 
+            position++;
             hop = new Vector3(5,0,0);
-            ChangeTrack();
+            StartCoroutine(Lerp());
             hopAudio.Play();
+            animator.Play("MaxSneakers-Right");
+       
+        }
+
+        if (position == 0 && transform.position.x != 0)
+        {
+            transform.position = new Vector3(0, transform.position.y, transform.position.z);
         }
         
+        if (position == -1 && transform.position.x != -5)
+        {
+            transform.position = new Vector3(-5, transform.position.y, transform.position.z);
+        }
+        
+        if (position == 1 && transform.position.x != 5)
+        {
+            transform.position = new Vector3(5, transform.position.y, transform.position.z);
+        }
+
+
+        
     }
-    private void ChangeTrack()
-    {
-        controller.Move(hop);
-    }
-    
-    private IEnumerator SlideCrouch()
+    private IEnumerator SlideCrouch()     // Slide crouching function
     {
         isSliding = true;
         controller.height = 0.5f;
-        controller.center -= new Vector3(0, 0.2f,0);
+        controller.center -= new Vector3(0, 0.8f,0);
         
         yield return new WaitForSeconds(0.6f);
         
         controller.height = 3f;
-        controller.center += new Vector3(0, 0.2f,0);
+        controller.center += new Vector3(0, 0.8f,0);
         isSliding = false;
+    }
+
+    private IEnumerator Lerp()     // Function, that changes track dynamically
+    {
+        canHop = false;
+        float time = 0;
+        float duration = 0.15f;
+        Vector3 startPosition = transform.position;
+        Vector3 endPosition = transform.position + hop;
+        while (time < duration)
+        {
+            transform.position = Vector3.Lerp(startPosition, endPosition, time / duration);
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        controller.Move(hop);
+        canHop = true;
     }
 }
 
