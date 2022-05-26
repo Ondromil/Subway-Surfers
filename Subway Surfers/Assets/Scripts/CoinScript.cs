@@ -17,10 +17,7 @@ public class CoinScript : MonoBehaviour
         coins++;
         collectSound.Play();
         Destroy(gameObject);
+        coinText.text = "Coins: " + coins;
     }
 
-    private void Update()
-    {
-        coinText.text = "Score: " + coins;
-    }
 }

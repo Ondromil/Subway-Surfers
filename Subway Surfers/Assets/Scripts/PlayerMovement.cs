@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 public class PlayerMovement: MonoBehaviour
@@ -36,9 +37,15 @@ public class PlayerMovement: MonoBehaviour
     private Animator animator;
 
     private float timeElapsed;
+
+    private float x;
     private void Start()
     {
+        transform.position = Vector3.zero;
         animator = GetComponent<Animator>();
+        
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
     
     private void FixedUpdate()
@@ -131,7 +138,7 @@ public class PlayerMovement: MonoBehaviour
     {
         canHop = false;
         float time = 0;
-        float duration = 0.15f;
+        float duration = 0.07f;
         Vector3 startPosition = transform.position;
         Vector3 endPosition = transform.position + hop;
         while (time < duration)
