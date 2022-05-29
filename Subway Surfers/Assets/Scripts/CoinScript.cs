@@ -12,10 +12,15 @@ public class CoinScript : MonoBehaviour
     public static int coins;
     public AudioSource collectSound;
 
+    private void Start()
+    {
+        coins = 0;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         coins++;
-        collectSound.Play();
+        FindObjectOfType<AudioManager>().Play("CoinCollect");
         Destroy(gameObject);
         coinText.text = "Coins: " + coins;
     }

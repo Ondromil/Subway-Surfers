@@ -11,7 +11,7 @@ public class ScoreScript : MonoBehaviour
     private bool scoreAdded = false;
     void Update()
     {
-        if (!scoreAdded)
+        if (!scoreAdded && !PlayerDeath.isDead)
         {
             scoreAdded = true;
             StartCoroutine(AddScore());

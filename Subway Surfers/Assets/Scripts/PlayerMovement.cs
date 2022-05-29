@@ -26,32 +26,24 @@ public class PlayerMovement: MonoBehaviour
     private int position = 0;
     private bool isSliding;
     private bool canHop = true;
-
     private Vector3 hop = Vector3.zero;
-
-    [Header("Audio")]
-    public AudioSource jumpAudio;
-    public AudioSource crouchAudio;
-    public AudioSource hopAudio;
-
-    private Animator animator;
-
+    public static Animator animator;
     private float timeElapsed;
-
-    private float x;
+    
     private void Start()
     {
         transform.position = Vector3.zero;
         animator = GetComponent<Animator>();
-        
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        PlayerDeath.isDead = false;
     }
     
     private void FixedUpdate()
     {
-        Vector3 move = transform.forward * moveSpeed / Time.fixedDeltaTime;    
-        controller.Move(move);                                             // Character moving forward
+        Vector3 move = transform.forward * moveSpeed / Time.fixedDeltaTime;
+        if (!PlayerDeath.isDead)                                                 // Character moving forward
+        {
+            controller.Move(move);  
+        }
         
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);    // Checks if character is on ground
         
@@ -65,40 +57,40 @@ public class PlayerMovement: MonoBehaviour
         
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.W) && isGrounded)    // Jumping
+        if (Input.GetKeyDown(KeyCode.W) && isGrounded && !PlayerDeath.isDead)    // Jumping
         {
             velocity.y = jumpHeight;
-            jumpAudio.Play();
+            FindObjectOfType<AudioManager>().Play("SwipeUp");
             animator.Play("MaxSneakers-JumpA");
         }
         
-        if (Input.GetKeyDown(KeyCode.S))   // Slide crouching
+        if (Input.GetKeyDown(KeyCode.S) && !PlayerDeath.isDead)   // Slide crouching
         {
             velocity.y = -40; 
             if (!isSliding)
             { 
                 StartCoroutine(SlideCrouch());     
             }
-            crouchAudio.Play();
+            FindObjectOfType<AudioManager>().Play("SwipeDown");
             animator.Play("MaxSneakers-Scroll");
         }
         
-        if (Input.GetKeyDown(KeyCode.A) && position != -1 && canHop)  // Hopping left
+        if (Input.GetKeyDown(KeyCode.A) && position != -1 && canHop && !PlayerDeath.isDead)  // Hopping left
         {
             position--;
-            hop = new Vector3(-5, 0, 0);
+            hop = new Vector3(-4.8f, 0, 0);
             StartCoroutine(Lerp());
-            hopAudio.Play();
+            FindObjectOfType<AudioManager>().Play("SwipeMove");
             animator.Play("MaxSneakers-Left");
       
         }
 
-        if (Input.GetKeyDown(KeyCode.D) && position != 1 && canHop)   // Hopping right
+        if (Input.GetKeyDown(KeyCode.D) && position != 1 && canHop && !PlayerDeath.isDead)   // Hopping right
         {
             position++;
-            hop = new Vector3(5,0,0);
+            hop = new Vector3(4.9f,0,0);
             StartCoroutine(Lerp());
-            hopAudio.Play();
+            FindObjectOfType<AudioManager>().Play("SwipeMove");
             animator.Play("MaxSneakers-Right");
        
         }
@@ -108,29 +100,29 @@ public class PlayerMovement: MonoBehaviour
             transform.position = new Vector3(0, transform.position.y, transform.position.z);
         }
         
-        if (position == -1 && transform.position.x != -5)
+        if (position == -1 && transform.position.x != -4.8f)
         {
-            transform.position = new Vector3(-5, transform.position.y, transform.position.z);
+            transform.position = new Vector3(-4.8f, transform.position.y, transform.position.z);
         }
         
-        if (position == 1 && transform.position.x != 5)
+        if (position == 1 && transform.position.x != 4.9f)
         {
-            transform.position = new Vector3(5, transform.position.y, transform.position.z);
+            transform.position = new Vector3(4.9f, transform.position.y, transform.position.z);
         }
-
-
         
     }
     private IEnumerator SlideCrouch()     // Slide crouching function
     {
         isSliding = true;
         controller.height = 0.5f;
-        controller.center -= new Vector3(0, 0.8f,0);
+        controller.center -= new Vector3(0, 0.9f,0);
+        PlayerDeath.checkRadius = 0.5f;
         
         yield return new WaitForSeconds(0.6f);
         
-        controller.height = 3f;
-        controller.center += new Vector3(0, 0.8f,0);
+        controller.height = 2.9f;
+        controller.center += new Vector3(0, 0.9f,0);
+        PlayerDeath.checkRadius = 1.5f;
         isSliding = false;
     }
 

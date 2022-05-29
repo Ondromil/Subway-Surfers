@@ -29,7 +29,7 @@ public class PauseMenu : MonoBehaviour
             }
             else
             {
-                if (!countdownActive)
+                if (!countdownActive && !PlayerDeath.isDead)
                 {
                     Pause();
                 }
@@ -43,16 +43,12 @@ public class PauseMenu : MonoBehaviour
         resumeButtonText.gameObject.SetActive(true);
         Time.timeScale = 0f;
         gamePaused = true;
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
     }
 
     public void Resume()
     {
         pauseMenu.SetActive(false);
         Time.timeScale = 1f;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
     }
 
     public IEnumerator Countdown()
@@ -79,6 +75,4 @@ public class PauseMenu : MonoBehaviour
     {
         StartCoroutine(Countdown());
     }
-
-
 }
