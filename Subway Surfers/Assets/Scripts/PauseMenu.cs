@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UIElements;
-using Cursor = UnityEngine.Cursor;
+using UnityEngine.Audio;
+
 
 public class PauseMenu : MonoBehaviour
 {
@@ -11,7 +12,12 @@ public class PauseMenu : MonoBehaviour
     public GameObject pauseMenu;
     public TMP_Text countdownText;
     public TMP_Text resumeButtonText;
+    public GameObject musicSlider;
+    public GameObject sfxSlider;
     private bool countdownActive = false;
+
+    public AudioMixer musicMixer;
+    public AudioMixer sfxMixer;
 
     private void Start()
     {
@@ -41,6 +47,8 @@ public class PauseMenu : MonoBehaviour
     {
         pauseMenu.SetActive(true);
         resumeButtonText.gameObject.SetActive(true);
+        musicSlider.gameObject.SetActive(true);
+        sfxSlider.gameObject.SetActive(true);
         Time.timeScale = 0f;
         gamePaused = true;
     }
@@ -51,11 +59,13 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 1f;
     }
 
-    public IEnumerator Countdown()
+    public IEnumerator Countdown()                         // Po stisknuti "Resume" začne odpočet 3 sekundy, aby se hráč mohl připravit
     {
         countdownActive = true;
         countdownText.gameObject.SetActive(true);
         resumeButtonText.gameObject.SetActive(false);
+        musicSlider.gameObject.SetActive(false);
+        sfxSlider.gameObject.SetActive(false);
 
         countdownText.text = "3";
         yield return new WaitForSecondsRealtime(0.5f);
@@ -74,5 +84,15 @@ public class PauseMenu : MonoBehaviour
     public void StartCountdown()
     {
         StartCoroutine(Countdown());
+    }
+
+    public void SetMusicVolume(float musicVolume)
+    {
+        musicMixer.SetFloat("Music volume", musicVolume);
+    }
+
+    public void SetSFXVolume(float SFXvolume)
+    {
+        sfxMixer.SetFloat("SFX volume", SFXvolume);
     }
 }

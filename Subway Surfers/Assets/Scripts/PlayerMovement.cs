@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class PlayerMovement: MonoBehaviour
 {
@@ -29,12 +30,21 @@ public class PlayerMovement: MonoBehaviour
     private Vector3 hop = Vector3.zero;
     public static Animator animator;
     private float timeElapsed;
+    private bool isChangingSide = false;
+    private float x = 0;
+
+    private Vector2 startPos;
+    private Vector2 currentPos;
+    private bool didAction = false;
     
+    public enum Tracks {Left, Mid, Right}
     private void Start()
     {
         transform.position = Vector3.zero;
         animator = GetComponent<Animator>();
         PlayerDeath.isDead = false;
+        CoinScript.coins = 0;
+        ScoreScript.score = 0;
     }
     
     private void FixedUpdate()
@@ -45,7 +55,7 @@ public class PlayerMovement: MonoBehaviour
             controller.Move(move);  
         }
         
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);    // Checks if character is on ground
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);   // Checks if character is on ground
         
         if (isGrounded && velocity.y < 0)
         {
@@ -57,6 +67,8 @@ public class PlayerMovement: MonoBehaviour
         
     private void Update()
     {
+        //Ovládání pomocí WASD
+        
         if (Input.GetKeyDown(KeyCode.W) && isGrounded && !PlayerDeath.isDead)    // Jumping
         {
             velocity.y = jumpHeight;
@@ -77,71 +89,92 @@ public class PlayerMovement: MonoBehaviour
         
         if (Input.GetKeyDown(KeyCode.A) && position != -1 && canHop && !PlayerDeath.isDead)  // Hopping left
         {
-            position--;
-            hop = new Vector3(-4.8f, 0, 0);
-            StartCoroutine(Lerp());
-            FindObjectOfType<AudioManager>().Play("SwipeMove");
-            animator.Play("MaxSneakers-Left");
-      
+            if (!isChangingSide)
+            {
+                position--;
+                x = -5;
+                StartCoroutine(ChangeTrack());
+                FindObjectOfType<AudioManager>().Play("SwipeMove");
+                animator.Play("MaxSneakers-Left");
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.D) && position != 1 && canHop && !PlayerDeath.isDead)   // Hopping right
         {
-            position++;
-            hop = new Vector3(4.9f,0,0);
-            StartCoroutine(Lerp());
-            FindObjectOfType<AudioManager>().Play("SwipeMove");
-            animator.Play("MaxSneakers-Right");
-       
+            if (!isChangingSide)
+            {
+                position++;
+                x = 5;
+                StartCoroutine(ChangeTrack());
+                FindObjectOfType<AudioManager>().Play("SwipeMove");
+                animator.Play("MaxSneakers-Right");
+            }
         }
-
-        if (position == 0 && transform.position.x != 0)
+        
+        //Ovládání pomocí myší  NENÍ HOTOVÝ
+        
+        if (Input.GetMouseButtonDown(0))
+        {
+            startPos = Input.mousePosition;
+            Debug.Log(startPos);
+            didAction = false;
+        }
+        if (Input.GetMouseButton(0))
+        {
+            currentPos = Input.mousePosition;
+        }
+        if ((startPos.y - currentPos.y) < -100 && isGrounded && !PlayerDeath.isDead && !didAction)
+        {
+            velocity.y = jumpHeight;
+            FindObjectOfType<AudioManager>().Play("SwipeUp");
+            animator.Play("MaxSneakers-JumpA");
+            didAction = true;
+        }
+        
+    
+        
+        
+        // Ošetření, pokud se hráč nedostane do správné pozice
+        
+        if (position == 0 && transform.position.x != 0 && !isChangingSide)
         {
             transform.position = new Vector3(0, transform.position.y, transform.position.z);
         }
         
-        if (position == -1 && transform.position.x != -4.8f)
+        if (position == -1 && transform.position.x != -4.8f && !isChangingSide)
         {
             transform.position = new Vector3(-4.8f, transform.position.y, transform.position.z);
         }
         
-        if (position == 1 && transform.position.x != 4.9f)
+        if (position == 1 && transform.position.x != 4.9f && !isChangingSide)
         {
             transform.position = new Vector3(4.9f, transform.position.y, transform.position.z);
         }
-        
     }
     private IEnumerator SlideCrouch()     // Slide crouching function
     {
         isSliding = true;
         controller.height = 0.5f;
-        controller.center -= new Vector3(0, 0.9f,0);
+        controller.center -= new Vector3(0, 0.8f,0);
         PlayerDeath.checkRadius = 0.5f;
         
         yield return new WaitForSeconds(0.6f);
         
         controller.height = 2.9f;
-        controller.center += new Vector3(0, 0.9f,0);
+        controller.center += new Vector3(0, 0.8f,0);
         PlayerDeath.checkRadius = 1.5f;
         isSliding = false;
     }
 
-    private IEnumerator Lerp()     // Function, that changes track dynamically
+    private IEnumerator ChangeTrack()     // Dynamický pohyb hráče do stran
     {
-        canHop = false;
-        float time = 0;
-        float duration = 0.07f;
-        Vector3 startPosition = transform.position;
-        Vector3 endPosition = transform.position + hop;
-        while (time < duration)
-        {
-            transform.position = Vector3.Lerp(startPosition, endPosition, time / duration);
-            time += Time.deltaTime;
-            yield return null;
-        }
-
+        isChangingSide = true;
+        transform.DOMoveX(transform.position.x + x, 0.15f);
+        yield return new WaitForSeconds(0.1f);
+        hop = new Vector3(x, 0, 0);
         controller.Move(hop);
-        canHop = true;
+        yield return new WaitForSeconds(0.1f);
+        isChangingSide = false;
     }
 }
 

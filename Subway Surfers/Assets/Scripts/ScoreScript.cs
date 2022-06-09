@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class ScoreScript : MonoBehaviour
 {
-    public int score;
+    public static int score;
     public TMP_Text scoreText;
     private bool scoreAdded = false;
     void Update()
