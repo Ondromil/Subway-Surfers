@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -17,17 +18,18 @@ public class PlayerDeath : MonoBehaviour
     public GameObject dieMenu;
     public TMP_Text highScoreText;
     
-    private static int highScore = 0;
+    public static int highScore = 0;
 
     void Start()
     {
        dieMenu.SetActive(false);
+       
     }
 
     private void Update()
     {
         touches = Physics.CheckSphere(controller.transform.position, checkRadius, colliderMask);    // Pokud se controller dotkne Ground Masky "Collider", hráč "umře"
-        if (touches && !isDead)
+        if ((touches && !isDead) || ((PlayerMovement.position == 2 || PlayerMovement.position == -2) && !isDead))
         {
             isDead = true;
             PlayerMovement.animator.Play("MaxFall-Back");
@@ -44,6 +46,11 @@ public class PlayerDeath : MonoBehaviour
         {
             highScore = ScoreScript.score;
             highScoreText.text = "" + highScore;
+
+            Save.PlayerData playerData = new Save.PlayerData();
+            playerData.highScore = highScore;
+            string json = JsonUtility.ToJson(playerData);
+            File.WriteAllText(Application.dataPath + "/saveFile.json", json);
         }
         else
         {
@@ -56,4 +63,3 @@ public class PlayerDeath : MonoBehaviour
         SceneManager.LoadScene("Main");
     }
 }
-

@@ -24,7 +24,8 @@ public class PlayerMovement: MonoBehaviour
     public float moveSpeed = 5;
     public float jumpHeight = 3f;
     
-    private int position = 0;
+    
+    public static int position = 0;
     private bool isSliding;
     private bool canHop = true;
     private Vector3 hop = Vector3.zero;
@@ -42,6 +43,7 @@ public class PlayerMovement: MonoBehaviour
     {
         transform.position = Vector3.zero;
         animator = GetComponent<Animator>();
+        position = 0;
         PlayerDeath.isDead = false;
         CoinScript.coins = 0;
         ScoreScript.score = 0;
@@ -71,68 +73,59 @@ public class PlayerMovement: MonoBehaviour
         
         if (Input.GetKeyDown(KeyCode.W) && isGrounded && !PlayerDeath.isDead)    // Jumping
         {
-            velocity.y = jumpHeight;
-            FindObjectOfType<AudioManager>().Play("SwipeUp");
-            animator.Play("MaxSneakers-JumpA");
+           Jump();
         }
         
         if (Input.GetKeyDown(KeyCode.S) && !PlayerDeath.isDead)   // Slide crouching
-        {
-            velocity.y = -40; 
-            if (!isSliding)
-            { 
-                StartCoroutine(SlideCrouch());     
-            }
-            FindObjectOfType<AudioManager>().Play("SwipeDown");
-            animator.Play("MaxSneakers-Scroll");
+        { 
+            Slide();
         }
         
-        if (Input.GetKeyDown(KeyCode.A) && position != -1 && canHop && !PlayerDeath.isDead)  // Hopping left
+        if (Input.GetKeyDown(KeyCode.A) && canHop && !PlayerDeath.isDead)  // Hopping left
         {
-            if (!isChangingSide)
-            {
-                position--;
-                x = -5;
-                StartCoroutine(ChangeTrack());
-                FindObjectOfType<AudioManager>().Play("SwipeMove");
-                animator.Play("MaxSneakers-Left");
-            }
+            SwipeLeft();
         }
 
-        if (Input.GetKeyDown(KeyCode.D) && position != 1 && canHop && !PlayerDeath.isDead)   // Hopping right
+        if (Input.GetKeyDown(KeyCode.D) && canHop && !PlayerDeath.isDead)   // Hopping right
         {
-            if (!isChangingSide)
-            {
-                position++;
-                x = 5;
-                StartCoroutine(ChangeTrack());
-                FindObjectOfType<AudioManager>().Play("SwipeMove");
-                animator.Play("MaxSneakers-Right");
-            }
+            SwipeRight();
         }
         
-        //Ovládání pomocí myší  NENÍ HOTOVÝ
+        //Ovládání pomocí myší  
         
         if (Input.GetMouseButtonDown(0))
         {
             startPos = Input.mousePosition;
-            Debug.Log(startPos);
             didAction = false;
         }
         if (Input.GetMouseButton(0))
         {
             currentPos = Input.mousePosition;
         }
+        
         if ((startPos.y - currentPos.y) < -100 && isGrounded && !PlayerDeath.isDead && !didAction)
         {
-            velocity.y = jumpHeight;
-            FindObjectOfType<AudioManager>().Play("SwipeUp");
-            animator.Play("MaxSneakers-JumpA");
+            Jump();
             didAction = true;
         }
         
-    
+        if ((startPos.y - currentPos.y) > 100 && !PlayerDeath.isDead && !didAction)
+        {
+            Slide();
+            didAction = true;
+        }
         
+        if ((startPos.x - currentPos.x) < -100 && !PlayerDeath.isDead && !didAction)
+        {
+           SwipeRight();
+           didAction = true;
+        }
+        
+        if ((startPos.x - currentPos.x) > 100 && !PlayerDeath.isDead && !didAction)
+        {
+            SwipeLeft();
+            didAction = true;
+        }
         
         // Ošetření, pokud se hráč nedostane do správné pozice
         
@@ -176,6 +169,46 @@ public class PlayerMovement: MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         isChangingSide = false;
     }
+
+    private void Jump()
+    {
+        velocity.y = jumpHeight;
+        FindObjectOfType<AudioManager>().Play("SwipeUp");
+        animator.Play("MaxSneakers-JumpA");
+    }
+
+    private void Slide()
+    {
+        velocity.y = -40; 
+        if (!isSliding)
+        { 
+            StartCoroutine(SlideCrouch());     
+        }
+        FindObjectOfType<AudioManager>().Play("SwipeDown");
+        animator.Play("MaxSneakers-Scroll");
+    }
+
+    private void SwipeLeft()
+    {
+        if (!isChangingSide)
+        {
+            position--;
+            x = -5;
+            StartCoroutine(ChangeTrack());
+            FindObjectOfType<AudioManager>().Play("SwipeMove");
+            animator.Play("MaxSneakers-Left");
+        }
+    }
+
+    private void SwipeRight()
+    {
+        if (!isChangingSide)
+        {
+            position++;
+            x = 5;
+            StartCoroutine(ChangeTrack());
+            FindObjectOfType<AudioManager>().Play("SwipeMove");
+            animator.Play("MaxSneakers-Right");
+        }
+    }
 }
-
-
